@@ -6,7 +6,7 @@ import urllib2
 url = "http://10.250.1.100:42000"
 
 # file to write output for prometheus to read
-outputfile = '~/testoutput.txt'
+outputfile = './testoutput.txt'
 
 
 
@@ -47,16 +47,41 @@ with open('%outputfile', 'w') as output:
             gpu_stats = table_row.find_all('td')
             
             # writing output to file. lines will not be trampled as we keep the file open for the duration of the script run.
-            output.write( "gpu_name: %s, gpu_temp: %s, gpu_power: %s, gpu_speed: %s, gpu_efficiency: %s, gpu_acceptedshares: %s, gpu_rejectedshares: %s\n" % \
-                       (gpu_stats[0].text,
-                        gpu_stats[1].text,
-                        gpu_stats[2].text,
-                        gpu_stats[3].text,
-                        gpu_stats[4].text,
-                        gpu_stats[5].text,
-                        gpu_stats[6].text))
+             
+            gpu_name = gpu_stats[0].text
+            gpu_temp = gpu_stats[1].text
+            gpu_power = gpu_stats[2].text
+            gpu_speed = gpu_stats[3].text
+            gpu_efficiency = gpu_stats[4].text
+            gpu_acceptedshares = gpu_stats[5].text
+            gpu_rejectedshares = gpu_stats[6].text
 
-        
+            payload = (gpu_name, gpu_temp, gpu_power, gpu_speed, gpu_efficiency, gpu_acceptedshares, gpu_rejectedshares)
+            
+
             # increment to go to next GPU
             current_gpu = current_gpu + 1
         
+
+from BaseHTTPServer import BaseHTTPRequestHandler
+import urlparse
+
+class GetHandler(BaseHTTPRequestHandler):
+    
+    def do_GET(self):
+        parsed_path = urlparse.urlparse(self.path)
+        message = [
+                payload
+                ]
+        for name, value in sorted(self.headers.items()):
+            
+            self.send_response(200)
+        self.end_headers()
+        self.wfile.write(message)
+        return
+
+if __name__ == '__main__':
+    from BaseHTTPServer import HTTPServer
+    server = HTTPServer(('localhost', 8080), GetHandler)
+    print 'Starting server, use <Ctrl-C> to stop'
+    server.serve_forever()
