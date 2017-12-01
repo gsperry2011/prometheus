@@ -1,5 +1,10 @@
 #import the library used to query a website
 import urllib2
+import os
+import sys
+import time
+import prometheus_client
+from prometheus_client import start_http_server, Metric, REGISTRY
 
 #########################
 #specify the url to scrap
@@ -49,39 +54,69 @@ with open('%outputfile', 'w') as output:
             # writing output to file. lines will not be trampled as we keep the file open for the duration of the script run.
              
             gpu_name = gpu_stats[0].text
+
             gpu_temp = gpu_stats[1].text
+            gpu_temp = gpu_temp.split('C')
+            gpu_temp = gpu_temp[0]
+            
             gpu_power = gpu_stats[2].text
+            gpu_power = gpu_power.split('W')
+            gpu_power = gpu_power[0]
+
+            
             gpu_speed = gpu_stats[3].text
+            gpu_speed = gpu_speed.split('Sol/s')
+            gpu_speed = gpu_speed[0]
+
+            
             gpu_efficiency = gpu_stats[4].text
+            gpu_efficiency = gpu_efficiency.split('Sol/W')
+            gpu_efficiency = gpu_efficiency[0]
+            
             gpu_acceptedshares = gpu_stats[5].text
             gpu_rejectedshares = gpu_stats[6].text
 
-            payload = (gpu_name, gpu_temp, gpu_power, gpu_speed, gpu_efficiency, gpu_acceptedshares, gpu_rejectedshares)
             
-
             # increment to go to next GPU
             current_gpu = current_gpu + 1
         
 
-from BaseHTTPServer import BaseHTTPRequestHandler
-import urlparse
 
-class GetHandler(BaseHTTPRequestHandler):
-    
-    def do_GET(self):
-        parsed_path = urlparse.urlparse(self.path)
-        message = [
-                payload
-                ]
-        for name, value in sorted(self.headers.items()):
-            
-            self.send_response(200)
-        self.end_headers()
-        self.wfile.write(message)
-        return
 
-if __name__ == '__main__':
-    from BaseHTTPServer import HTTPServer
-    server = HTTPServer(('localhost', 8080), GetHandler)
-    print 'Starting server, use <Ctrl-C> to stop'
-    server.serve_forever()
+
+class ewbfcollector(object):
+    def ___init___(self):
+        pass
+
+    def collect(self):
+
+        metric = Metric(gpu_name, 'GPU temp', 'gauge')
+        metric.add_sample('gpu_temp_celcius', value=float(gpu_temp), labels={})
+        yield metric
+
+        metric = Metric(gpu_name, 'GPU power', 'gauge')
+        metric.add_sample('gpu_power_watts', value=float(gpu_power), labels={})
+        yield metric
+
+        metric = Metric(gpu_name, 'GPU hashrate Sol/s', 'gauge')
+        metric.add_sample('gpu_hashrate', value=float(gpu_speed), labels={})
+        yield metric
+
+        metric = Metric(gpu_name, 'GPU efficiency Sol/W', 'gauge')
+        metric.add_sample('gpu_efficiency', value=float(gpu_efficiency), labels={})
+        yield metric
+
+        metric = Metric(gpu_name, 'GPU accepted shares', 'gauge')
+        metric.add_sample('gpu_acceptedshares', value=float(gpu_acceptedshares), labels={})
+        yield metric
+
+        metric = Metric(gpu_name, 'GPU rejected shares', 'gauge')
+        metric.add_sample('gpu_rejectedshares', value=float(gpu_rejectedshares), labels={})
+        yield metric
+
+
+if __name__ == "__main__":
+    print 'starting web server...'
+    start_http_server(8000)
+    REGISTRY.register(ewbfcollector())
+    while True: time.sleep(1)
