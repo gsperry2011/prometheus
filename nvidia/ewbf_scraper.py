@@ -5,7 +5,8 @@ import prometheus_client
 from prometheus_client import start_http_server, Metric, REGISTRY
 
 
-def scrape_ewbf():
+# call this function with the GPU number you wish to return data for. Starting at 0.
+def scrape_ewbf(current_gpu):
 
     import urllib2
     from bs4 import BeautifulSoup
@@ -24,9 +25,6 @@ def scrape_ewbf():
     # Used to store our stats scraped from the table.
     gpu_statistic_array = []
     
-    # Tracking current GPU ID
-    current_gpu = 0
-
     for table_row in statistics_table:
         
         # what we will search the table_row for
@@ -79,7 +77,7 @@ class ewbfcollector(object):
 
     def collect(self):
 
-        payload = scrape_ewbf()
+        payload = scrape_ewbf(1)
         gpu_name = payload[0]
         gpu_temp = payload[1]
         gpu_power = payload[2]
