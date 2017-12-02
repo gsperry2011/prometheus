@@ -1,5 +1,6 @@
 # requires:
-# prometheus_client, lxml, urllib2, BeautifulSoup4, 
+# python3 will give windows pip, python2 is required. register both in environment vars
+# prometheus_client, lxml, urllib3, BeautifulSoup4 
 
 import os
 import sys
@@ -80,7 +81,7 @@ class ewbfcollector(object):
         count = 0
 
         # this count number must be equal to then number of GPUs in the system, else you will get None type errors
-        while count < 3:
+        while count < 1:
 
             payload = scrape_ewbf(count)
             gpu_name = payload[0]
@@ -97,32 +98,32 @@ class ewbfcollector(object):
             gpu_rejectedshares = payload[6]
             
             # used to add unique ID GPUs
-            gpu_id = str(count)
+            gpu_id = 'gpu' + str(count)
 
 
             
             metric = Metric(gpu_name, 'GPU temp'  , 'gauge')
-            metric.add_sample((gpu_name + gpu_id + 'gpu_temp_celcius'), value=float(gpu_temp), labels={})
+            metric.add_sample(( gpu_id + gpu_name + 'gpu_temp_celcius'), value=float(gpu_temp), labels={})
             yield metric
             
             metric = Metric(gpu_name, 'GPU power', 'gauge')
-            metric.add_sample((gpu_name + gpu_id + 'gpu_power_watts'), value=float(gpu_power), labels={})
+            metric.add_sample(( gpu_id + gpu_name + 'gpu_power_watts'), value=float(gpu_power), labels={})
             yield metric
             
             metric = Metric(gpu_name, 'GPU hashrate Sol/s', 'gauge')
-            metric.add_sample((gpu_name + gpu_id + 'gpu_hashrate'), value=float(gpu_speed), labels={})
+            metric.add_sample(( gpu_id + gpu_name + 'gpu_hashrate'), value=float(gpu_speed), labels={})
             yield metric
             
             metric = Metric(gpu_name, 'GPU efficiency Sol/W', 'gauge')
-            metric.add_sample((gpu_name + gpu_id  + 'gpu_efficiency'), value=float(gpu_efficiency), labels={})
+            metric.add_sample(( gpu_id + gpu_name  + 'gpu_efficiency'), value=float(gpu_efficiency), labels={})
             yield metric
             
             metric = Metric(gpu_name, 'GPU accepted shares', 'gauge')
-            metric.add_sample((gpu_name + gpu_id + 'gpu_acceptedshares'), value=float(gpu_acceptedshares), labels={})
+            metric.add_sample(( gpu_id + gpu_name + 'gpu_acceptedshares'), value=float(gpu_acceptedshares), labels={})
             yield metric
             
             metric = Metric(gpu_name, 'GPU rejected shares', 'gauge')
-            metric.add_sample((gpu_name + gpu_id + 'gpu_rejectedshares'), value=float(gpu_rejectedshares), labels={})
+            metric.add_sample(( gpu_id + gpu_name + 'gpu_rejectedshares'), value=float(gpu_rejectedshares), labels={})
             yield metric
 
             # walk to next GPU 
