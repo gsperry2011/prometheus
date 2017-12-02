@@ -79,7 +79,7 @@ class ewbfcollector(object):
 
         count = 0
 
-        while count < 3:
+        while count < 6:
             payload = scrape_ewbf(count)
             gpu_name = payload[0]
             gpu_temp = payload[1]
@@ -112,8 +112,6 @@ class ewbfcollector(object):
             metric = Metric(gpu_name, 'GPU rejected shares', 'gauge')
             metric.add_sample('gpu_rejectedshares', value=float(gpu_rejectedshares), labels={})
             yield metric
-
-            count = count + 1
 
 
 # start web server and post ewbf data        
