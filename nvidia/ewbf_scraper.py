@@ -65,10 +65,7 @@ def scrape_ewbf(current_gpu):
 
             return [gpu_name, gpu_temp, gpu_power, gpu_speed, gpu_efficiency, gpu_acceptedshares, gpu_rejectedshares]
         
-            # increment to go to next GPU
-            current_gpu = current_gpu + 1
-            
-        
+                
 # posting data to local http for prometheus to scrape
 class ewbfcollector(object):
 
@@ -79,7 +76,7 @@ class ewbfcollector(object):
 
         count = 0
 
-        while count < 6:
+        while count < 3:
             payload = scrape_ewbf(count)
             gpu_name = payload[0]
             gpu_temp = payload[1]
@@ -112,6 +109,9 @@ class ewbfcollector(object):
             metric = Metric(gpu_name, 'GPU rejected shares', 'gauge')
             metric.add_sample('gpu_rejectedshares', value=float(gpu_rejectedshares), labels={})
             yield metric
+
+            # walk to next GPU 
+            count = count + 1
 
 
 # start web server and post ewbf data        
