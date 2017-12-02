@@ -12,7 +12,7 @@ def scrape_ewbf(current_gpu):
     from bs4 import BeautifulSoup
 
     #specify the url to scrap
-    url = "http://10.250.1.100:42000"
+    url = "http://127.0.0.1:42000"
     
     page = urllib2.urlopen(url)
     
