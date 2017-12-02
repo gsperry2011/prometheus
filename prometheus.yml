@@ -35,6 +35,7 @@ scrape_configs:
 
     metrics_path: .
     static_configs:
-      - targets: ['gpu01.wcbc.local:42000']
+      - targets: ['gpu01.wcbc.local:8000']
 
 
+      
