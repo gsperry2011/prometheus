@@ -1,0 +1,6 @@
+groups:
+- name: node.rules
+  rules:
+  - alert: MinerDown
+    expr: up{job="miners"} == 0
+    for: 5m
