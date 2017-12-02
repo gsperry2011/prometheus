@@ -4,7 +4,7 @@ import time
 import prometheus_client
 from prometheus_client import start_http_server, Metric, REGISTRY
 
-
+# scrapes ewbf webpage and sanatizes data for consumption by prometheus.
 # call this function with the GPU number you wish to return data for. Starting at 0.
 def scrape_ewbf(current_gpu):
 
@@ -69,7 +69,7 @@ def scrape_ewbf(current_gpu):
             current_gpu = current_gpu + 1
             
         
-
+# posting data to local http for prometheus to scrape
 class ewbfcollector(object):
 
     def ___init___(self):
@@ -77,40 +77,46 @@ class ewbfcollector(object):
 
     def collect(self):
 
-        payload = scrape_ewbf(1)
-        gpu_name = payload[0]
-        gpu_temp = payload[1]
-        gpu_power = payload[2]
-        gpu_speed = payload[3]
-        gpu_efficiency = payload[4]
-        gpu_acceptedshares = payload[5]
-        gpu_rejectedshares = payload[6]
-        
-        metric = Metric(gpu_name, 'GPU temp', 'gauge')
-        metric.add_sample('gpu_temp_celcius', value=float(gpu_temp), labels={})
-        yield metric
+        count = 0
 
-        metric = Metric(gpu_name, 'GPU power', 'gauge')
-        metric.add_sample('gpu_power_watts', value=float(gpu_power), labels={})
-        yield metric
+        while count < 3:
+            payload = scrape_ewbf(count)
+            gpu_name = payload[0]
+            gpu_temp = payload[1]
+            gpu_power = payload[2]
+            gpu_speed = payload[3]
+            gpu_efficiency = payload[4]
+            gpu_acceptedshares = payload[5]
+            gpu_rejectedshares = payload[6]
+            
+            metric = Metric(gpu_name, 'GPU temp', 'gauge')
+            metric.add_sample('gpu_temp_celcius', value=float(gpu_temp), labels={})
+            yield metric
+            
+            metric = Metric(gpu_name, 'GPU power', 'gauge')
+            metric.add_sample('gpu_power_watts', value=float(gpu_power), labels={})
+            yield metric
+            
+            metric = Metric(gpu_name, 'GPU hashrate Sol/s', 'gauge')
+            metric.add_sample('gpu_hashrate', value=float(gpu_speed), labels={})
+            yield metric
+            
+            metric = Metric(gpu_name, 'GPU efficiency Sol/W', 'gauge')
+            metric.add_sample('gpu_efficiency', value=float(gpu_efficiency), labels={})
+            yield metric
+            
+            metric = Metric(gpu_name, 'GPU accepted shares', 'gauge')
+            metric.add_sample('gpu_acceptedshares', value=float(gpu_acceptedshares), labels={})
+            yield metric
+            
+            metric = Metric(gpu_name, 'GPU rejected shares', 'gauge')
+            metric.add_sample('gpu_rejectedshares', value=float(gpu_rejectedshares), labels={})
+            yield metric
 
-        metric = Metric(gpu_name, 'GPU hashrate Sol/s', 'gauge')
-        metric.add_sample('gpu_hashrate', value=float(gpu_speed), labels={})
-        yield metric
-
-        metric = Metric(gpu_name, 'GPU efficiency Sol/W', 'gauge')
-        metric.add_sample('gpu_efficiency', value=float(gpu_efficiency), labels={})
-        yield metric
-
-        metric = Metric(gpu_name, 'GPU accepted shares', 'gauge')
-        metric.add_sample('gpu_acceptedshares', value=float(gpu_acceptedshares), labels={})
-        yield metric
-
-        metric = Metric(gpu_name, 'GPU rejected shares', 'gauge')
-        metric.add_sample('gpu_rejectedshares', value=float(gpu_rejectedshares), labels={})
-        yield metric
+            count = count + 1
 
 
+# start web server and post ewbf data        
 if __name__ == "__main__":
     
     print 'starting web server...'
